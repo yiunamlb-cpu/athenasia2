@@ -36,10 +36,10 @@ SILVER_TIERS = {
 }
 
 FIXED_FEES = {
-    [cite_start]"TAX_REP": 2600,       # Standard Tax Rep Fee [cite: 13, 19]
-    [cite_start]"BANK_CONF": 500,      # Bank Confirmation per account [cite: 13]
-    [cite_start]"BRONZE_LIMIT": 1200,  # Max entries for Bronze [cite: 12]
-    [cite_start]"SILVER_OVERAGE": 5    # Cost per entry over 24,000 [cite: 24]
+    "TAX_REP": 2600,       # Standard Tax Rep Fee
+    "BANK_CONF": 500,      # Bank Confirmation per account
+    "BRONZE_LIMIT": 1200,  # Max entries for Bronze
+    "SILVER_OVERAGE": 5    # Cost per entry over 24,000
 }
 
 # --- SIDEBAR: CLIENT INPUTS ---
@@ -182,3 +182,4 @@ st.markdown(f"""
 - [cite_start]**Platinum:** Starts at HKD 50k/month[cite: 38].
     - *Pitch:* Personal oversight from Dr. Timmermans.
 """)
+
