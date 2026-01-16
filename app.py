@@ -10,7 +10,7 @@ st.divider()
 
 # --- DATA TABLES (SOURCED FROM PRICE LIST 2026) ---
 
-# BRONZE: Max Turnover -> Total Package Price (Accounting + Audit + Tax) [cite: 13]
+# BRONZE: Max Turnover -> Total Package Price (Accounting + Audit + Tax)
 BRONZE_TIERS = {
     0: 5800, 250000: 9800, 500000: 12800, 1000000: 16800,
     2000000: 21300, 3000000: 25800, 4000000: 28800, 5000000: 37800,
@@ -18,7 +18,7 @@ BRONZE_TIERS = {
     15000000: 68600, 20000000: 76100, 25000000: 82600
 }
 
-# SECONDARY AUDIT: Max Turnover -> Audit Fee (Sign + Work) [cite: 19]
+# SECONDARY AUDIT: Max Turnover -> Audit Fee (Sign + Work)
 SECONDARY_AUDIT_TIERS = {
     0: 2600, 250000: 4000, 500000: 5000, 1000000: 5000,
     2000000: 7000, 3000000: 7500, 4000000: 8000, 5000000: 12000,
@@ -26,7 +26,7 @@ SECONDARY_AUDIT_TIERS = {
     15000000: 32000, 20000000: 38500, 25000000: 45000
 }
 
-# SILVER: Max Entries -> Monthly Fee 
+# SILVER: Max Entries -> Monthly Fee
 SILVER_TIERS = {
     600: 1500, 1800: 2000, 3000: 3000, 6000: 4000,
     9000: 5000, 12000: 6000, 18000: 8000, 24000: 10000
@@ -36,9 +36,9 @@ FIXED_FEES = {
     "TAX_REP": 2600,       # Standard Tax Rep Fee
     "BANK_CONF": 500,      # Bank Confirmation per account
     "BRONZE_LIMIT": 1200,  # Max entries for Bronze
-    "SILVER_OVERAGE": 5,   # Cost per entry over 24,000 
-    "GOLD_BASE_YR": 240000,# Gold starts at 20k/month 
-    "PLATINUM_BASE_YR": 600000 # Platinum starts at 50k/month 
+    "SILVER_OVERAGE": 5,   # Cost per entry over 24,000
+    "GOLD_BASE_YR": 240000,# Gold starts at 20k/month
+    "PLATINUM_BASE_YR": 600000 # Platinum starts at 50k/month
 }
 
 # --- SIDEBAR: CLIENT INPUTS ---
@@ -92,9 +92,8 @@ def get_silver_price(turnover, entries):
 
     # 2. Audit Fee (Secondary List)
     audit_fee = 0
-    # Use the max tier if turnover exceeds list, or find correct tier
     if turnover > 25000000:
-        audit_fee = 45000 # Cap at max listed or custom
+        audit_fee = 45000 # Cap or custom
     else:
         for limit, price in SECONDARY_AUDIT_TIERS.items():
             if turnover <= limit:
@@ -104,17 +103,16 @@ def get_silver_price(turnover, entries):
     total = accounting_annual + audit_fee + FIXED_FEES["TAX_REP"] + FIXED_FEES["BANK_CONF"]
     return total, accounting_annual, audit_fee
 
-# --- MAIN CALCULATION & DISPLAY ---
+# --- MAIN CALCULATION ---
 
 bronze_price, bronze_msg = get_bronze_price(turnover, annual_entries)
 silver_total, silver_acct, silver_audit = get_silver_price(turnover, annual_entries)
 
-# Calculate Gold Total (Base + Audit + Tax + Bank)
-# Gold uses the same Audit/Tax fees as Silver/Secondary list
+# Calculate Gold Total (for upsell comparison)
 gold_total = FIXED_FEES["GOLD_BASE_YR"] + silver_audit + FIXED_FEES["TAX_REP"] + FIXED_FEES["BANK_CONF"]
 
-# DECISION ENGINE
-recommended_package = "Silver" # Default fallback
+# DECISION ENGINE (Bronze vs Silver only)
+recommended_package = "Silver"
 rec_reason = ""
 
 if bronze_price and silver_total < bronze_price:
@@ -123,72 +121,83 @@ if bronze_price and silver_total < bronze_price:
 elif bronze_price:
     recommended_package = "Bronze"
     rec_reason = "Client fits Bronze limits (Best Price)."
-elif annual_entries > 48000:
-    recommended_package = "Gold"
-    rec_reason = "Volume (>48k) makes Gold cheaper than Silver surcharges."
-elif turnover > 20000000:
-    recommended_package = "Gold"
-    rec_reason = "High Turnover (>20M) requires Gold for Tax Optimization."
 else:
     recommended_package = "Silver"
     rec_reason = "Client exceeds Bronze limits (1,200 entries)."
 
-# --- UI DISPLAY ---
+# --- DISPLAY RECOMMENDATION ---
 
-if recommended_package == "Gold":
-    st.warning(f"### 🏆 Recommendation: GOLD Package")
-    st.markdown(f"**Reason:** {rec_reason}")
-elif recommended_package == "Bronze":
+if recommended_package == "Bronze":
     st.success(f"### 💡 Recommendation: BRONZE Package")
-    st.markdown(f"**Reason:** {rec_reason}")
 else:
     st.info(f"### 💡 Recommendation: SILVER Package")
-    st.markdown(f"**Reason:** {rec_reason}")
+st.markdown(f"**Reason:** {rec_reason}")
 
 st.divider()
 
-col1, col2, col3 = st.columns(3)
+# --- MAIN COMPARISON COLUMNS ---
+col1, col2 = st.columns(2)
 
 # 1. BRONZE CARD
 with col1:
-    st.subheader("🥉 Bronze")
+    st.subheader("🥉 Bronze (Standard)")
     if bronze_price:
         is_winner = (recommended_package == "Bronze")
-        st.metric(label="Total Annual Cost", value=f"HKD {bronze_price:,.0f}", delta="Recommended" if is_winner else None)
-        st.caption("Bundled Fee (Acct + Audit + Tax)")
+        st.metric(label="Total Annual Cost", value=f"HKD {bronze_price:,.0f}", delta="Best Value" if is_winner else None)
+        st.write("Yearly Reporting | Standard Priority")
+        st.caption("Includes: Accounting, Audit, Tax, Bank Conf.")
     else:
         st.error(f"Not Eligible")
         st.caption(f"Reason: {bronze_msg}")
 
 # 2. SILVER CARD
 with col2:
-    st.subheader("🥈 Silver")
+    st.subheader("🥈 Silver (Monthly)")
     is_winner = (recommended_package == "Silver")
-    st.metric(label="Total Annual Cost", value=f"HKD {silver_total:,.0f}", delta="Recommended" if is_winner else None)
+    st.metric(label="Total Annual Cost", value=f"HKD {silver_total:,.0f}", delta="Best Value" if is_winner else None)
+    st.write("Monthly Reporting | Dedicated Accountant")
     
-    with st.expander("Breakdown"):
+    with st.expander("Silver Breakdown"):
         st.write(f"Acct: {silver_acct:,.0f}")
         st.write(f"Audit: {silver_audit:,.0f}")
         st.write(f"Tax: {FIXED_FEES['TAX_REP']:,.0f}")
         st.write(f"Bank: {FIXED_FEES['BANK_CONF']:,.0f}")
         if annual_entries > 24000:
-            st.warning(f"⚠️ High Volume Surcharge applied! (+{(annual_entries-24000)*5:,.0f})")
+            st.warning(f"⚠️ Volume Surcharge: +{(annual_entries-24000)*5:,.0f}")
 
-# 3. GOLD CARD
-with col3:
-    st.subheader("🥇 Gold")
-    is_winner = (recommended_package == "Gold")
-    st.metric(label="Total Annual Cost", value=f"HKD {gold_total:,.0f}", delta="Best Value" if is_winner else None)
-    st.caption("Includes Tax Optimization & Forecasts")
+# --- PREMIUM UPGRADES SECTION ---
+st.markdown("---")
+st.subheader("🚀 Premium Upgrades")
+
+# Calculate price gap
+upgrade_gap = gold_total - silver_total
+
+col_gold, col_plat = st.columns(2)
+
+with col_gold:
+    st.markdown("#### 🥇 Upgrade to Gold")
     
-    with st.expander("Breakdown"):
-        st.write(f"Acct (Base): {FIXED_FEES['GOLD_BASE_YR']:,.0f}")
-        st.write(f"Audit: {silver_audit:,.0f}")
-        st.write("Includes Tax Advisory")
+    # Check if Gold is actually cheaper (High Volume Anomaly)
+    if gold_total < silver_total:
+        st.success(f"**PRO TIP:** Gold is actually **CHEAPER** than Silver for this volume!")
+        st.metric("Gold Total", f"HKD {gold_total:,.0f}", delta=f"Save {silver_total - gold_total:,.0f}")
+    else:
+        st.metric("Gold Total", f"HKD {gold_total:,.0f}", delta=f"+ HKD {upgrade_gap:,.0f} vs Silver", delta_color="off")
+    
+    st.markdown("""
+    **Why Upgrade?**
+    * ✅ **Financial Forecasts** (Yearly)
+    * ✅ **Tax Optimization Review**
+    * ✅ **Higher Priority** (Jump Queue)
+    """)
 
-# --- PLATINUM TRIGGER ---
-if turnover > 50000000: # Only show Platinum for >50M Turnover
-    st.divider()
-    st.error("💎 **PLATINUM TIER ELIGIBLE**")
-    st.markdown(f"Turnover is **HKD {turnover:,.0f}**. Recommended for Dr. Timmermans' oversight.")
-    st.metric("Platinum Starting Price", f"HKD {FIXED_FEES['PLATINUM_BASE_YR'] + silver_audit:,.0f} +")
+with col_plat:
+    st.markdown("#### 💎 Upgrade to Platinum")
+    plat_price = FIXED_FEES["PLATINUM_BASE_YR"] + silver_audit
+    st.metric("Starting Price", f"HKD {plat_price:,.0f}+")
+    st.markdown("""
+    **Why Upgrade?**
+    * ✅ **Dr. Timmermans Oversight**
+    * ✅ **Highest Priority**
+    * ✅ **Complex Tax Advisory**
+    """)
