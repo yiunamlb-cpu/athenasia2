@@ -4,8 +4,8 @@ import pandas as pd
 # --- CONFIGURATION & STYLING ---
 st.set_page_config(page_title="Athenasia Pricing Calculator", layout="wide")
 
-st.title("Athenasia Pricing Calculator 2026")
-st.markdown("### 🇭🇰 Package Recommender & Quote Generator")
+st.title("Athenasia Pricing Calculator")
+st.markdown("### FOR INTERNAL USE ONLY")
 st.divider()
 
 # --- DATA TABLES (SOURCED FROM PRICE LIST 2026) ---
@@ -233,3 +233,4 @@ with col_plat:
     * ✅ **Highest Priority**
     * ✅ **Complex Tax Advisory**
     """)
+
