@@ -111,17 +111,30 @@ silver_total, silver_acct, silver_audit = get_silver_price(turnover, annual_entr
 # Calculate Gold Total (for upsell comparison)
 gold_total = FIXED_FEES["GOLD_BASE_YR"] + silver_audit + FIXED_FEES["TAX_REP"] + FIXED_FEES["BANK_CONF"]
 
-# DECISION ENGINE (Bronze vs Silver only)
+# DECISION ENGINE (The "Value Upgrade" Logic)
 recommended_package = "Silver"
 rec_reason = ""
+upsell_note = ""
 
 if bronze_price and silver_total < bronze_price:
+    # 1. Silver is CHEAPER than Bronze (Smart Save)
     recommended_package = "Silver"
     rec_reason = f"Silver is **HKD {bronze_price - silver_total:,.0f} cheaper** than Bronze due to low volume."
+
+elif bronze_price and (silver_total - bronze_price) <= 3000:
+    # 2. STRATEGIC UPGRADE: Silver is slightly more expensive (<3k), but better value
+    recommended_package = "Silver"
+    diff = silver_total - bronze_price
+    rec_reason = f"**Great Value Upgrade:** Silver is only HKD {diff:,.0f} more than Bronze."
+    upsell_note = f"⚠️ **Note:** Bronze is technically cheaper (HKD {bronze_price:,.0f}), but we recommend Silver for the superior monthly reporting."
+
 elif bronze_price:
+    # 3. Bronze is significantly cheaper (>3k difference)
     recommended_package = "Bronze"
     rec_reason = "Client fits Bronze limits (Best Price)."
+
 else:
+    # 4. Client doesn't qualify for Bronze
     recommended_package = "Silver"
     rec_reason = "Client exceeds Bronze limits (1,200 entries)."
 
@@ -129,9 +142,12 @@ else:
 
 if recommended_package == "Bronze":
     st.success(f"### 💡 Recommendation: BRONZE Package")
+    st.markdown(f"**Reason:** {rec_reason}")
 else:
     st.info(f"### 💡 Recommendation: SILVER Package")
-st.markdown(f"**Reason:** {rec_reason}")
+    st.markdown(f"**Reason:** {rec_reason}")
+    if upsell_note:
+        st.warning(upsell_note) # Shows the special note about Bronze being cheaper
 
 st.divider()
 
@@ -143,7 +159,7 @@ with col1:
     st.subheader("🥉 Bronze (Standard)")
     if bronze_price:
         is_winner = (recommended_package == "Bronze")
-        st.metric(label="Total Annual Cost", value=f"HKD {bronze_price:,.0f}", delta="Best Value" if is_winner else None)
+        st.metric(label="Total Annual Cost", value=f"HKD {bronze_price:,.0f}", delta="Lowest Price" if not is_winner else "Recommended")
         st.write("Yearly Reporting | Standard Priority")
         st.caption("Includes: Accounting, Audit, Tax, Bank Conf.")
     else:
@@ -154,8 +170,9 @@ with col1:
 with col2:
     st.subheader("🥈 Silver (Monthly)")
     is_winner = (recommended_package == "Silver")
-    st.metric(label="Total Annual Cost", value=f"HKD {silver_total:,.0f}", delta="Best Value" if is_winner else None)
+    st.metric(label="Total Annual Cost", value=f"HKD {silver_total:,.0f}", delta="Recommended Upgrade" if is_winner else None)
     st.write("Monthly Reporting | Dedicated Accountant")
+    st.markdown("**Software:** Xero Subscription Included")
     
     with st.expander("Silver Breakdown"):
         st.write(f"Acct: {silver_acct:,.0f}")
@@ -177,7 +194,6 @@ col_gold, col_plat = st.columns(2)
 with col_gold:
     st.markdown("#### 🥇 Upgrade to Gold")
     
-    # Check if Gold is actually cheaper (High Volume Anomaly)
     if gold_total < silver_total:
         st.success(f"**PRO TIP:** Gold is actually **CHEAPER** than Silver for this volume!")
         st.metric("Gold Total", f"HKD {gold_total:,.0f}", delta=f"Save {silver_total - gold_total:,.0f}")
@@ -189,6 +205,7 @@ with col_gold:
     * ✅ **Financial Forecasts** (Yearly)
     * ✅ **Tax Optimization Review**
     * ✅ **Higher Priority** (Jump Queue)
+    * ✅ **Software:** Xero Included
     """)
 
 with col_plat:
