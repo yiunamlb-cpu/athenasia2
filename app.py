@@ -147,7 +147,7 @@ else:
     st.info(f"### 💡 Recommendation: SILVER Package")
     st.markdown(f"**Reason:** {rec_reason}")
     if upsell_note:
-        st.warning(upsell_note) # Shows the special note about Bronze being cheaper
+        st.warning(upsell_note)
 
 st.divider()
 
@@ -161,6 +161,7 @@ with col1:
         is_winner = (recommended_package == "Bronze")
         st.metric(label="Total Annual Cost", value=f"HKD {bronze_price:,.0f}", delta="Lowest Price" if not is_winner else "Recommended")
         st.write("Yearly Reporting | Standard Priority")
+        st.markdown("**Software:** Excel or Xero")
         st.caption("Includes: Accounting, Audit, Tax, Bank Conf.")
     else:
         st.error(f"Not Eligible")
@@ -172,13 +173,14 @@ with col2:
     is_winner = (recommended_package == "Silver")
     st.metric(label="Total Annual Cost", value=f"HKD {silver_total:,.0f}", delta="Recommended Upgrade" if is_winner else None)
     st.write("Monthly Reporting | Dedicated Accountant")
-    st.markdown("**Software:** Xero Subscription Included")
+    st.markdown("**Software:** Xero (Charged Separately)") # Corrected
     
     with st.expander("Silver Breakdown"):
         st.write(f"Acct: {silver_acct:,.0f}")
         st.write(f"Audit: {silver_audit:,.0f}")
         st.write(f"Tax: {FIXED_FEES['TAX_REP']:,.0f}")
         st.write(f"Bank: {FIXED_FEES['BANK_CONF']:,.0f}")
+        st.caption("*Plus Xero Subscription fee (billed separately)*") # Corrected
         if annual_entries > 24000:
             st.warning(f"⚠️ Volume Surcharge: +{(annual_entries-24000)*5:,.0f}")
 
@@ -205,7 +207,7 @@ with col_gold:
     * ✅ **Financial Forecasts** (Yearly)
     * ✅ **Tax Optimization Review**
     * ✅ **Higher Priority** (Jump Queue)
-    * ✅ **Software:** Xero Included
+    * ℹ️ *Xero charged separately*
     """)
 
 with col_plat:
