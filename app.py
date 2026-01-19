@@ -5,13 +5,13 @@ import pandas as pd
 st.set_page_config(page_title="Athenasia Pricing Calculator", layout="wide")
 
 st.title("Athenasia Pricing Calculator")
-st.markdown("### FOR INTERNAL USE ONLY")
+st.markdown("FOR INTERNAL USE ONLY")
 st.divider()
 
 # --- DATA TABLES (SOURCED FROM PRICE LIST 2026) ---
 
 # BRONZE: Max Turnover -> Total Package Price (Accounting + Audit + Tax)
-# Source: Page 5 "AAT PACKAGE YEARLY" [cite: 13]
+# Source: Page 5 "AAT PACKAGE YEARLY"
 BRONZE_TIERS = {
     0: 5800, 250000: 9800, 500000: 12800, 1000000: 16800,
     2000000: 21300, 3000000: 25800, 4000000: 28800, 5000000: 37800,
@@ -20,7 +20,7 @@ BRONZE_TIERS = {
 }
 
 # SECONDARY AUDIT: Max Turnover -> Audit Fee (Sign + Work)
-# Source: Page 6 & 19 "Secondary list" for Silver/Gold [cite: 19]
+# Source: Page 6 & 19 "Secondary list" for Silver/Gold
 SECONDARY_AUDIT_TIERS = {
     0: 2600, 250000: 4000, 500000: 5000, 1000000: 5000,
     2000000: 7000, 3000000: 7500, 4000000: 8000, 5000000: 12000,
@@ -29,19 +29,19 @@ SECONDARY_AUDIT_TIERS = {
 }
 
 # SILVER: Max Entries -> Monthly Fee
-# Source: Page 8 & 24 "Silver" Table [cite: 24]
+# Source: Page 8 & 24 "Silver" Table
 SILVER_TIERS = {
     600: 1500, 1800: 2000, 3000: 3000, 6000: 4000,
     9000: 5000, 12000: 6000, 18000: 8000, 24000: 10000
 }
 
 FIXED_FEES = {
-    "TAX_REP": 2600,       # Standard Tax Rep Fee [cite: 13]
-    "BANK_CONF": 500,      # Bank Confirmation per account [cite: 13]
-    "BRONZE_LIMIT": 1200,  # Max entries for Bronze [cite: 12]
-    "SILVER_OVERAGE": 5,   # Cost per entry over 24,000 [cite: 24]
-    "GOLD_BASE_YR": 240000,# Gold starts at 20k/month 
-    "PLATINUM_BASE_YR": 600000 # Platinum starts at 50k/month 
+    "TAX_REP": 2600,       # Standard Tax Rep Fee
+    "BANK_CONF": 500,      # Bank Confirmation per account
+    "BRONZE_LIMIT": 1200,  # Max entries for Bronze
+    "SILVER_OVERAGE": 5,   # Cost per entry over 24,000
+    "GOLD_BASE_YR": 240000,# Gold starts at 20k/month
+    "PLATINUM_BASE_YR": 600000 # Platinum starts at 50k/month
 }
 
 # --- SIDEBAR: CLIENT INPUTS ---
@@ -64,7 +64,7 @@ with st.sidebar:
     else:
         with col2:
             payouts = st.number_input("Payouts per Month", value=2, help="e.g. Amazon bi-weekly = 2")
-        annual_entries = (payouts * 12) + (expense_tx * 12) # [cite: 9]
+        annual_entries = (payouts * 12) + (expense_tx * 12)
 
     st.info(f"**Calculated Annual Entries:** {annual_entries:,}")
 
@@ -128,8 +128,9 @@ elif bronze_price and (silver_total - bronze_price) <= 3000:
     # 2. STRATEGIC UPGRADE: Silver is slightly more expensive (<3k), but better value
     recommended_package = "Silver"
     diff = silver_total - bronze_price
-    rec_reason = f"**Strongly Recommend Upgrade:** Silver is only HKD {diff:,.0f} more than Bronze."
-    # Detailed Selling Points from Page 2 
+    rec_reason = f"**Great Value Upgrade:** Silver is only HKD {diff:,.0f} more than Bronze."
+    
+    # Detailed Selling Points (Why upgrade?)
     upsell_bullets = [
         "**Peace of Mind:** In Silver, Athenasia pays fines if we are at fault. In Bronze, YOU pay the fines.",
         "**Dedicated Human:** You get a specific dedicated accountant, not a 'random assignment' pool.",
@@ -158,7 +159,8 @@ else:
     
     # Show the "Sales Pitch" if it's a strategic upgrade
     if upsell_bullets:
-        st.warning(f"**Why pay the extra HKD {silver_total - bronze_price:,.0f}?**")
+        diff = silver_total - bronze_price
+        st.warning(f"**Bronze is HKD {diff:,.0f} cheaper, but we recommend Silver because:**")
         for bullet in upsell_bullets:
             st.markdown(f"- {bullet}")
 
@@ -233,4 +235,3 @@ with col_plat:
     * ✅ **Highest Priority**
     * ✅ **Complex Tax Advisory**
     """)
-
