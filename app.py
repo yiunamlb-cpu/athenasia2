@@ -4,7 +4,7 @@ import pandas as pd
 # --- CONFIGURATION & STYLING ---
 st.set_page_config(page_title="Athenasia Pricing Calculator", layout="wide")
 
-st.title("Athenasia Pricing Calculator")
+st.title("ATHENASIA Pricing Calculator")
 st.markdown("⚠️ FOR INTERNAL USE ONLY ⚠️")
 st.divider()
 
@@ -235,5 +235,6 @@ with col_plat:
     * ✅ **Highest Priority**
     * ✅ **Complex Tax Advisory**
     """)
+
 
 
