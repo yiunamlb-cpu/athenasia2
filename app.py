@@ -4,24 +4,37 @@ import pandas as pd
 # --- CONFIGURATION & STYLING ---
 st.set_page_config(page_title="Athenasia Pricing Calculator", layout="wide")
 
-# --- UPDATED HEADER (INTERNAL USE WARNING) ---
+# --- HEADER ---
 st.title("ATHENASIA Pricing Calculator")
 st.markdown("⚠️⚠️⚠️ FOR INTERNAL USE ONLY ⚠️⚠️⚠️")
 st.divider()
 
 # --- DATA TABLES (SOURCED FROM PRICE LIST 2026) ---
 
-# BRONZE: Max Turnover -> Total Package Price (Accounting + Audit + Tax)
-# [cite_start]Source: Page 5 "AAT PACKAGE YEARLY" [cite: 13]
-BRONZE_TIERS = {
-    0: 5800, 250000: 9800, 500000: 12800, 1000000: 16800,
-    2000000: 21300, 3000000: 25800, 4000000: 28800, 5000000: 37800,
-    7000000: 42800, 8000000: 46600, 10000000: 55600, 12000000: 60600,
-    15000000: 68600, 20000000: 76100, 25000000: 82600
+# BRONZE BREAKDOWN DATA
+# Format: Max Turnover : (Total AAT, Accounting, Audit Total, Tax Rep)
+# Source: Page 5 Table 
+# Audit Total = Audit Signing + Audit Work
+BRONZE_DETAILED = {
+    0:        {"total": 5800,  "acct": 2600,  "audit": 600,   "tax": 2600}, # Non-Commenced
+    250000:   {"total": 9800,  "acct": 3200,  "audit": 4000,  "tax": 2600}, # Seed
+    500000:   {"total": 12800, "acct": 5200,  "audit": 5000,  "tax": 2600}, # Seed+
+    1000000:  {"total": 16800, "acct": 9200,  "audit": 5000,  "tax": 2600}, # Starter
+    2000000:  {"total": 21300, "acct": 11700, "audit": 7000,  "tax": 2600}, # Starter+
+    3000000:  {"total": 25800, "acct": 15700, "audit": 7500,  "tax": 2600}, # Business
+    4000000:  {"total": 28800, "acct": 18200, "audit": 8000,  "tax": 2600}, # Business+
+    5000000:  {"total": 37800, "acct": 23200, "audit": 12000, "tax": 2600}, # Enterprise
+    7000000:  {"total": 42800, "acct": 27200, "audit": 13000, "tax": 2600}, # Enterprise+
+    8000000:  {"total": 46600, "acct": 30000, "audit": 14000, "tax": 2600}, # Venture
+    10000000: {"total": 55600, "acct": 32000, "audit": 21000, "tax": 2600}, # Venture+
+    12000000: {"total": 60600, "acct": 33000, "audit": 25000, "tax": 2600}, # Growth
+    15000000: {"total": 68600, "acct": 34000, "audit": 32000, "tax": 2600}, # Growth+
+    20000000: {"total": 76100, "acct": 35000, "audit": 38500, "tax": 2600}, # Ascend
+    25000000: {"total": 82600, "acct": 35000, "audit": 45000, "tax": 2600}, # Ascend+
 }
 
 # SECONDARY AUDIT: Max Turnover -> Audit Fee (Sign + Work)
-# [cite_start]Source: Page 6 & 19 "Secondary list" for Silver/Gold [cite: 19]
+# Source: Page 6 & 19 "Secondary list" for Silver/Gold [cite: 19]
 SECONDARY_AUDIT_TIERS = {
     0: 2600, 250000: 4000, 500000: 5000, 1000000: 5000,
     2000000: 7000, 3000000: 7500, 4000000: 8000, 5000000: 12000,
@@ -30,13 +43,12 @@ SECONDARY_AUDIT_TIERS = {
 }
 
 # SILVER: Max Entries -> Monthly Fee
-# [cite_start]Source: Page 8 & 24 "Silver" Table [cite: 24]
+# Source: Page 8 & 24 "Silver" Table [cite: 24]
 SILVER_TIERS = {
     600: 1500, 1800: 2000, 3000: 3000, 6000: 4000,
     9000: 5000, 12000: 6000, 18000: 8000, 24000: 10000
 }
 
-# [cite_start]Source: Tax Rep [cite: 13][cite_start], Bank Conf [cite: 13][cite_start], Silver/Gold base rates [cite: 4]
 FIXED_FEES = {
     "TAX_REP": 2600,       # Standard Tax Rep Fee
     "BANK_CONF": 500,      # Bank Confirmation per account
@@ -74,12 +86,15 @@ with st.sidebar:
 
 def get_bronze_price(turnover, entries):
     if entries > FIXED_FEES["BRONZE_LIMIT"]:
-        return None, "Too many entries (>1,200)"
+        return None, "Too many entries (>1,200)", {}
     
-    for limit, price in BRONZE_TIERS.items():
+    for limit, details in BRONZE_DETAILED.items():
         if turnover <= limit:
-            return price + FIXED_FEES["BANK_CONF"], "Eligible"
-    return None, "Turnover too high"
+            # We found the tier. Return total price + breakdown dictionary
+            total_price = details["total"] + FIXED_FEES["BANK_CONF"]
+            return total_price, "Eligible", details
+            
+    return None, "Turnover too high", {}
 
 def get_silver_price(turnover, entries):
     # 1. Accounting Fee
@@ -110,7 +125,7 @@ def get_silver_price(turnover, entries):
 
 # --- MAIN CALCULATION ---
 
-bronze_price, bronze_msg = get_bronze_price(turnover, annual_entries)
+bronze_price, bronze_msg, bronze_details = get_bronze_price(turnover, annual_entries)
 silver_total, silver_acct, silver_audit = get_silver_price(turnover, annual_entries)
 
 # Calculate Gold Total (for upsell comparison)
@@ -208,6 +223,14 @@ with col1:
         st.write("Yearly Reporting | Standard Priority")
         st.markdown("**Software:** Excel or Xero")
         st.caption("Includes: Accounting, Audit, Tax, Bank Conf.")
+        
+        # BRONZE BREAKDOWN
+        with st.expander("Bronze Breakdown"):
+            st.write(f"Acct: {bronze_details['acct']:,.0f}")
+            st.write(f"Audit: {bronze_details['audit']:,.0f}")
+            st.write(f"Tax: {bronze_details['tax']:,.0f}")
+            st.write(f"Bank: {FIXED_FEES['BANK_CONF']:,.0f}")
+            
     else:
         st.error(f"Not Eligible")
         st.caption(f"Reason: {bronze_msg}")
